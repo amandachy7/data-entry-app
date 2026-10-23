@@ -65,8 +65,6 @@ DB_USERNAME=postgres
 DB_PASSWORD="admin"
 ```
 
-Replace the username and password with your own PostgreSQL credentials.
-
 Run the database migrations to create the required tables:
 
 ```bash
