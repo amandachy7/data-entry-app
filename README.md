@@ -1,20 +1,55 @@
 # Data Entry Application
 
-A web-based data entry application built with **Laravel, Vue.js, and PostgreSQL**. The application provides an interface for managing store and product data through a Laravel REST API.
+A full-stack web application built with **Laravel, Vue.js, and PostgreSQL**. It provides a data input form and a data table:
+
+- **Data Input Form** with fields Name, Store, and Product.
+- The **Product dropdown is dynamic**: it only shows products that match the tier of the selected Store, and it stays disabled until a Store is chosen.
+- **Data Table** that lists all submitted entries (Name, Store, Product).
 
 ## Tech Stack
 
-- **Backend:** Laravel, PHP
+- **Backend:** PHP, Laravel (REST API)
 - **Frontend:** Vue.js, Vite
 - **Database:** PostgreSQL
-- **API:** REST API
+
+## Database Design
+
+The reference dataset is normalized into four tables:
+
+```
+tiers
+  id, name
+
+stores
+  id, name, tier_id  ->  tiers.id
+
+products
+  id, name, tier_id  ->  tiers.id
+
+entries
+  id, name, store_id -> stores.id, product_id -> products.id, timestamps
+```
+
+A store belongs to one tier, and a product belongs to one tier. Therefore, the products available to a store are the products that share the store's tier.
+
+## API Endpoints
+
+Base URL: `http://127.0.0.1:8000/api`
+
+| Method | Endpoint                    | Description                                          |
+|--------|-----------------------------|------------------------------------------------------|
+| GET    | `/stores`                   | List all stores                                      |
+| GET    | `/stores/{id}/products`     | List products that match the tier of the given store |
+| GET    | `/entries`                  | List all submitted entries                           |
+| POST   | `/entries`                  | Save a new entry (`name`, `store_id`, `product_id`)  |
+
+The backend also validates that the selected product matches the tier of the selected store.
 
 ## Prerequisites
 
-Make sure the following tools are installed on your computer:
+Make sure the following tools are installed:
 
-- PHP
-- Composer
+- PHP 8.2+ and Composer
 - Node.js and npm
 - PostgreSQL
 - Git
@@ -36,15 +71,21 @@ Install the PHP dependencies:
 composer install
 ```
 
-Create the environment configuration file.
+Create the environment file.
 
-On Windows PowerShell:
+macOS / Linux:
+
+```bash
+cp .env.example .env
+```
+
+Windows PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-Generate the Laravel application key:
+Generate the application key:
 
 ```bash
 php artisan key:generate
@@ -52,68 +93,64 @@ php artisan key:generate
 
 ### 3. Set Up the Database
 
-Make sure PostgreSQL is running, then create a database named `data_entry_db`.
+Make sure PostgreSQL is running, then create a database named `data_entry_db`:
 
-Configure the database connection in the backend `.env` file:
+```bash
+psql -U postgres -c "CREATE DATABASE data_entry_db;"
+```
 
-```env
+Open the `.env` file and set the database connection. Replace the username and password with your own PostgreSQL credentials:
+
+```
 DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_DATABASE=data_entry_db
-DB_USERNAME=postgres
-DB_PASSWORD="admin"
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
 ```
 
-Run the database migrations to create the required tables:
+Run the migrations and seed the initial data (tiers, stores, products, and sample entries):
 
 ```bash
-php artisan migrate
+php artisan migrate --seed
 ```
 
-### 4. Seed the Initial Data
+The seeders are located in `database/seeders/` (`TierSeeder`, `StoreSeeder`, `ProductSeeder`, `EntrySeeder`). They use `updateOrInsert`, so running them again will not create duplicate tier, store, or product records.
 
-Populate the database with the initial tier, store, product, and entry records:
-
-```bash
-php artisan db:seed
-```
-
-The seeders are located in `database/seeders/`:
-
-- `TierSeeder.php`
-- `StoreSeeder.php`
-- `ProductSeeder.php`
-- `EntrySeeder.php`
-
-Run the seeders after migrations have completed successfully. The seeders use `updateOrInsert` for tier, store, and product records to reduce duplicate records when run repeatedly.
-
-### 5. Start the Backend Server
-
-From the project root directory, run:
+### 4. Start the Backend Server
 
 ```bash
 php artisan serve
 ```
 
-The Laravel backend will be available at:
+The API will be available at `http://127.0.0.1:8000`. Keep this terminal running.
 
-`http://127.0.0.1:8000`
+### 5. Set Up the Frontend
 
-Keep this terminal running.
-
-### 6. Set Up the Frontend
-
-Open a new terminal and navigate to the frontend directory:
+Open a **new terminal**:
 
 ```bash
 cd data-entry-frontend
+npm install
 ```
 
-Install the frontend dependencies:
+Create the frontend environment file and make sure it points to the backend:
+
+macOS / Linux:
 
 ```bash
-npm install
+cp .env.example .env
+```
+
+Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+```
+VITE_API_URL=http://127.0.0.1:8000/api
 ```
 
 Start the Vue development server:
@@ -122,30 +159,37 @@ Start the Vue development server:
 npm run dev
 ```
 
-Open the local URL displayed in the terminal, usually:
+Open the URL shown in the terminal, usually `http://localhost:5173`.
 
-`http://localhost:5173`
-
-Keep this terminal running as well.
+> **Note:** The frontend (port 5173) and the backend (port 8000) run on different origins. CORS is configured in the Laravel backend to allow `http://localhost:5173`. If you run the frontend on a different port, update the allowed origins in `config/cors.php`.
 
 ## Running the Application
 
-To use the application:
-
 1. Start PostgreSQL.
-2. Start the Laravel backend using `php artisan serve`.
-3. Start the Vue frontend using `npm run dev`.
-4. Open the frontend URL in your browser.
+2. Start the backend: `php artisan serve` (in the project root).
+3. Start the frontend: `npm run dev` (in `data-entry-frontend`).
+4. Open `http://localhost:5173` in your browser.
 
-Make sure the frontend API configuration points to the correct Laravel backend URL.
+## Quick API Check
+
+To verify that the backend works, open this URL in your browser:
+
+```
+http://127.0.0.1:8000/api/stores/1/products
+```
+
+It should return a JSON list of products that match the tier of store 1.
+
+> The API is served by Laravel on port **8000**. Port 5173 is only the Vue frontend.
+
+## Troubleshooting
+
+- **Cannot connect to the database:** check that PostgreSQL is running and that the `.env` credentials are correct.
+- **Product dropdown stays empty:** check that the backend is running and that `VITE_API_URL` is correct.
+- **CORS error in the browser console:** check the allowed origins in `config/cors.php`.
+- **Route not found:** run `php artisan route:list` to confirm that the `/api` routes are registered.
 
 ## Notes
 
-- Run PostgreSQL before starting the backend.
-- Keep the backend and frontend running in separate terminals.
-- Never commit `.env` files or database credentials to GitHub.
-- Database tables are created using Laravel migrations.
-- Initial application data is provided by Laravel seeders.
-- Update the frontend API base URL if your local backend uses a different address.
-
-This project was developed for learning and demonstration purposes.
+- Never commit `.env` files or real credentials to the repository.
+- Database tables are created with Laravel migrations, and initial data is provided by Laravel seeders.
