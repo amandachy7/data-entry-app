@@ -11,6 +11,8 @@ const theme = ref("light");
 const API_URL = "http://127.0.0.1:8000/api";
 
 const name = ref("");
+const selectedDetailToko = ref(null);
+const selectedDetailProduk = ref(null);
 const selectedStore = ref("");
 const selectedProduct = ref("");
 
@@ -519,6 +521,18 @@ onMounted(loadDashboard);
                                 </td>
 
                                 <td>
+                                    <!-- Tombol Lihat Detail -->
+                                    <button
+                                        class="action-button view-button"
+                                        type="button"
+                                        title="Lihat detail"
+                                        aria-label="Lihat detail"
+                                        @click="selectedDetailToko = store"
+                                    >
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+
+                                    <!-- Tombol Edit -->
                                     <button
                                         class="action-button view-button"
                                         type="button"
@@ -593,13 +607,25 @@ onMounted(loadDashboard);
                                 </td>
 
                                 <td>
+                                    <!-- Tombol Lihat Detail -->
                                     <button
                                         class="action-button view-button"
                                         type="button"
-                                        title="Edit produk"
-                                        aria-label="Edit produk"
+                                        title="Lihat detail"
+                                        aria-label="Lihat detail"
+                                        @click="selectedDetailProduk = product"
+                                    >
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+
+                                    <!-- Tombol Edit -->
+                                    <button
+                                        class="action-button view-button"
+                                        type="button"
+                                        title="Edit toko"
+                                        aria-label="Edit toko"
                                         @click="
-                                            editingProduct = { ...product };
+                                            editingProduct = { ...store };
                                             showProductModal = true;
                                         "
                                     >
@@ -647,4 +673,147 @@ onMounted(loadDashboard);
         @close="showProductModal = false"
         @save="handleProductSave"
     />
+
+    <!-- Modal Detail Toko -->
+    <div
+        v-if="selectedDetailToko"
+        class="modal-backdrop"
+        @click.self="selectedDetailToko = null"
+    >
+        <section
+            class="detail-modal store-modal"
+            role="dialog"
+            aria-modal="true"
+        >
+            <div class="modal-heading">
+                <div class="heading-icon icon-blue">
+                    <i class="fa-solid fa-store"></i>
+                </div>
+
+                <div>
+                    <h2>Detail Toko</h2>
+                    <p>Informasi lengkap toko.</p>
+                </div>
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    aria-label="Tutup"
+                    @click="selectedDetailToko = null"
+                >
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="modal-form">
+                <p>
+                    <strong>Kode Toko:</strong>
+                    {{ selectedDetailToko.store_code ?? "-" }}
+                </p>
+                <p>
+                    <strong>Nama Toko:</strong>
+                    {{ selectedDetailToko.name ?? "-" }}
+                </p>
+                <p>
+                    <strong>Alamat:</strong>
+                    {{ selectedDetailToko.address ?? "-" }}
+                </p>
+                <p>
+                    <strong>Kota:</strong> {{ selectedDetailToko.city ?? "-" }}
+                </p>
+                <p>
+                    <strong>Provinsi:</strong>
+                    {{ selectedDetailToko.province ?? "-" }}
+                </p>
+                <p>
+                    <strong>Tier:</strong>
+                    {{ selectedDetailToko.tier?.name ?? "-" }}
+                </p>
+
+                <button
+                    type="button"
+                    class="save-button modal-done"
+                    @click="selectedDetailToko = null"
+                >
+                    Tutup
+                </button>
+            </div>
+        </section>
+    </div>
+    <!-- Modal Detail Produk -->
+    <div
+        v-if="selectedDetailProduk"
+        class="modal-backdrop"
+        @click.self="selectedDetailProduk = null"
+    >
+        <section
+            class="detail-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="product-detail-title"
+        >
+            <div class="modal-heading">
+                <div class="heading-icon icon-blue">
+                    <i class="fa-solid fa-box"></i>
+                </div>
+
+                <div>
+                    <h2 id="product-detail-title">Detail Produk</h2>
+                    <p>Informasi lengkap produk.</p>
+                </div>
+
+                <button
+                    type="button"
+                    class="modal-close"
+                    aria-label="Tutup"
+                    @click="selectedDetailProduk = null"
+                >
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="modal-form">
+                <p>
+                    <strong>Kode Produk:</strong>
+                    {{ selectedDetailProduk.product_code ?? "-" }}
+                </p>
+
+                <p>
+                    <strong>Nama Produk:</strong>
+                    {{ selectedDetailProduk.name ?? "-" }}
+                </p>
+
+                <p>
+                    <strong>Kategori:</strong>
+                    {{ selectedDetailProduk.category ?? "-" }}
+                </p>
+
+                <p>
+                    <strong>Tier:</strong>
+                    {{ selectedDetailProduk.tier?.name ?? "-" }}
+                </p>
+
+                <p>
+                    <strong>Harga:</strong>
+                    {{
+                        selectedDetailProduk.price != null
+                            ? new Intl.NumberFormat("id-ID", {
+                                  style: "currency",
+                                  currency: "IDR",
+                                  maximumFractionDigits: 0,
+                              }).format(selectedDetailProduk.price)
+                            : "-"
+                    }}
+                </p>
+
+                <button
+                    type="button"
+                    class="save-button modal-done"
+                    @click="selectedDetailProduk = null"
+                >
+                    Tutup
+                </button>
+            </div>
+        </section>
+    </div>
 </template>
