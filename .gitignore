@@ -1,0 +1,9 @@
+/.env
+/vendor/
+/node_modules/
+/data-entry-frontend/node_modules/
+/data-entry-frontend/dist/
+/data-entry-frontend/.env
+/public/build/
+.vscode/
+.idea/
